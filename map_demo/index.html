@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地图Demo</title>
+    <script src="js/jquery-1.11.1.min.js"></script>
+    <script src="js/echarts.min.js"></script>
+    <style>
+        #mapBody {
+            background-color: #fff;
+        }
+
+        #main {
+            margin: 20px auto;
+            width: 1000px;
+            height: 720px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="main"></div>
+</body>
+
+<script>
+    let city = [];
+
+    let mapCity = {
+        "中国": "china",
+        "台湾": "taiwan",
+        "河北": "hebei",
+        "山西": "shanxi",
+        "辽宁": "liaoning",
+        "吉林": "jilin",
+        "黑龙江": "heilongjiang",
+        "江苏": "jiangsu",
+        "浙江": "zhejiang",
+        "安徽": "anhui",
+        "福建": "fujian",
+        "江西": "jiangxi",
+        "山东": "shandong",
+        "河南": "henan",
+        "湖北": "hubei",
+        "湖南": "hunan",
+        "广东": "guangdong",
+        "海南": "hainan",
+        "四川": "sichuan",
+        "贵州": "guizhou",
+        "云南": "yunnan",
+        "陕西": "shanxi1",
+        "甘肃": "gansu",
+        "青海": "qinghai",
+        "新疆": "xinjiang",
+        "广西": "guangxi",
+        "内蒙古": "neimenggu",
+        "宁夏": "ningxia",
+        "西藏": "xizang",
+        "北京": "beijing",
+        "天津": "tianjin",
+        "上海": "shanghai",
+        "重庆": "chongqing",
+        "香港": "xianggang",
+        "澳门": "aomen"
+    };
+    let chart = echarts.init(document.getElementById('main'));
+    chart.clear();
+    getData('中国');
+    //单击穿透事件
+    chart.on('click', function (params) {
+        if (params.name in mapCity) {
+            getData(params.name)
+        }
+        else {
+            getData('中国')
+        }
+    });
+
+
+
+
+    function initMap(area, data) {
+        let title = area + '战绩分布图';
+        area = mapCity[area]
+        let option = {
+            title: {
+                text: title,
+                textStyle: {
+                    fontWeight: 'bold'
+                },
+                left: 'center',
+            },
+            tooltip: {
+                show: true
+            },
+            animation: true,
+            animationDuration: 1000,
+            animationEasing: 'cubicOut',
+            animationDurationUpdate: 1000,
+            visualMap: {
+                show: true,
+                type: 'piecewise',
+                orient: 'horizontal',
+                top: 30,
+                left: 'center',
+                showLabel: true,
+                pieces: [
+                    { gte: 100, label: '≥100' },
+                    { gte: 50, lt: 100, label: '<100' },
+                    { gte: 10, lt: 50, label: '<50' },
+                    { gt: 0, lt: 10, label: '<10' },
+                    { lt: 1, label: '<1' }
+                ],
+
+                inRange: {
+                    color: ['rgb(203,203,203)', '#e6f7ff', '#8bc4ff', '#1890FF', '#0050b3'] // 颜色
+                },
+            },
+            geo: {
+                regions:
+                    [
+                        {
+                            name: "南海诸岛",
+                            itemStyle: {
+                                // 隐藏地图
+                                normal: {
+                                    opacity: 0, // 为 0 时不绘制该图形 挡着有点难看
+                                }
+                            },
+                            label: {
+                                show: false // 隐藏文字
+                            }
+                        }
+                    ],
+                show: true,
+                map: area,
+                aspectScale: 0.85,
+                zoom: 1,
+                roam: true,
+                scaleLimit: { //滚轮缩放的极限控制
+                    min: 0.5,
+                    max: 6
+                },
+                label: {
+                    show: true,
+                    fontSize: 14,
+
+                }
+            },
+            series: [
+                {
+                    nameMap: {
+                        'china': '中国'
+                    },
+                    top: 20,
+                    type: 'map',
+                    name: '战绩分布图',
+                    coordinateSystem: 'geo',
+                    geoIndex: 0,
+                    data: data
+
+                }
+            ],
+
+        }
+        chart.clear();
+        chart.setOption(option, true);
+    }
+
+
+
+
+
+    function getData(area) {
+        console.log(area)
+        $.getJSON('json/' + mapCity[area] + '.json', function (data) {
+            //重新绘制地图
+            var newCity = []
+            for (var i = 0; i < data.features.length; i++) {
+                if (data.features[i].properties.name == '青海') {
+                    console.info(i * 2)
+                }
+                newCity.push({
+                    //获取地图数据
+                    name: data.features[i].properties.name,
+                    //此处虚拟数据，应从后台服务获取数据
+                    value: i * 2
+                })
+            }
+            city = newCity
+            echarts.registerMap(mapCity[area], data);
+            initMap(area, city);
+        });
+    }
+
+
+</script>
+
+</html>
